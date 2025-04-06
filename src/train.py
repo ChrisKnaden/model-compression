@@ -69,7 +69,7 @@ def train_model(model, train_loader, optimizer, criterion, device, num_epochs=10
 
 
 def train_model_kd(student_model, teacher_model, train_loader, optimizer, device,
-                   loss_fn_kd, kd_params, num_epochs=10, use_amp=False):
+                    kd_params, loss_fn_kd, num_epochs=10, use_amp=False):
 
     # Disable AMP for MPS/CPU
     if device.type != 'cuda':
