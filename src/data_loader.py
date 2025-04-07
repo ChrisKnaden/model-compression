@@ -44,3 +44,4 @@ def get_cifar10_loader(split='train', batch_size=128, workers=0, subset_size=0):
         pin_memory=True)
 
     return loader
+
