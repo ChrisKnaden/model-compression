@@ -1,6 +1,8 @@
+from pathlib import Path
 import time
 import torch
 import torch.nn as nn
+import os
 
 def evaluate(model, val_loader, device, use_half=False):
 
@@ -34,11 +36,15 @@ def evaluate(model, val_loader, device, use_half=False):
     elapsed = time.time() - start
 
     print(f"Validation Accuracy: {acc:.2f}%, Avg Loss: {avg_loss:.4f}, Time: {elapsed:.2f}s")
-    return acc, avg_loss
+    return acc, avg_loss, elapsed
+
+import time
+import torch
 
 def measure_inference_time(model, dataloader, device, num_batches=100):
     model.eval()
 
+    # Warm-up
     with torch.inference_mode():
         for _ in range(5):
             inputs, _ = next(iter(dataloader))
@@ -52,6 +58,8 @@ def measure_inference_time(model, dataloader, device, num_batches=100):
             if i >= num_batches:
                 break
 
+            inputs = inputs.to(device)
+
             start_time = time.time()
             _ = model(inputs)
             end_time = time.time()
@@ -60,3 +68,52 @@ def measure_inference_time(model, dataloader, device, num_batches=100):
 
     avg_time_per_batch = total_time / num_batches
     return avg_time_per_batch
+
+def count_total_parameters(model, verbose=True):
+    """Counts and optionally prints the total number of parameters in the model."""
+    total = sum(p.numel() for p in model.parameters())
+    if verbose:
+        print(f"Total number of parameters in the model: {total}")
+    return total
+
+def evaluate_model_all_metrics(model, val_loader, device, path):
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    filepath = BASE_DIR / path
+    filepath.parent.mkdir(parents=True, exist_ok=True)
+
+    accuracy, loss, _ = evaluate(model, val_loader, device)
+    params = count_total_parameters(model)
+    memory_footprint = estimate_model_memory_footprint_from_bits(params)
+    file_size = get_model_file_size(filepath)
+
+    cpu_device = torch.device("cpu")
+    model_cpu = model.to(cpu_device)
+
+    # This is horrible, only for presentation purpose
+    is_quantized = 'quant' in str(path).lower()
+
+    if not is_quantized:
+        model_cpu = model_cpu.float()
+
+    inference_time = measure_inference_time(model_cpu, val_loader, cpu_device)
+    return {
+        "accuracy": accuracy,
+        "parameters": params,
+        "inference_time": inference_time,
+        "memory_footprint": memory_footprint,
+        "file_size": file_size
+    }
+
+def estimate_model_memory_footprint_from_bits(param_count, bits=32):
+    bytes_per_param = bits / 8
+    total_bytes = param_count * bytes_per_param
+    return total_bytes / (1024 ** 2)
+
+def get_model_file_size(path, unit="MB"):
+    size_bytes = os.path.getsize(path)
+    if unit == "MB":
+        return size_bytes / (1024 * 1024)
+    elif unit == "KB":
+        return size_bytes / 1024
+    else:
+        return size_bytes

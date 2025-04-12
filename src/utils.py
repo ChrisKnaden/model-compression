@@ -3,15 +3,7 @@ from src.evaluate import evaluate
 import torch
 import time
 import torch_pruning as tp
-
-
-
-def count_total_parameters(model, verbose=True):
-    """Counts and optionally prints the total number of parameters in the model."""
-    total = sum(p.numel() for p in model.parameters())
-    if verbose:
-        print(f"Total number of parameters in the model: {total}")
-    return total
+from torch.ao.nn.quantized import BatchNorm2d
 
 def save_model(model, relative_path):
     BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,6 +25,32 @@ def load_model(relative_path, device=None, weights_only=False):
     if weights_only:
         return checkpoint.get("model_state_dict", checkpoint)
     return checkpoint
+
+def save_quantized_model(model, path: str):
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    filepath = BASE_DIR / path
+    filepath.parent.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+
+    model.eval()
+
+    for name, module in model.named_modules():
+        if isinstance(module, BatchNorm2d):
+            if hasattr(module, 'scale') and isinstance(module.scale, torch.Tensor):
+                module.scale = torch.tensor(module.scale.item())  # scalar tensor
+            if hasattr(module, 'zero_point') and isinstance(module.zero_point, torch.Tensor):
+                module.zero_point = torch.tensor(int(module.zero_point.item()))  # scalar tensor
+
+    scripted = torch.jit.script(model)
+    scripted.save(filepath)
+
+
+def load_quantized_model(path: str):
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    filepath = BASE_DIR / path
+
+    model = torch.jit.load(filepath)
+    model.eval()
+    return model
 
 def quantize_model(model, val_loader, device, backend='fbgemm'):
     model.to(device)
@@ -60,31 +78,6 @@ def quantize_model(model, val_loader, device, backend='fbgemm'):
     model_quantized = torch.quantization.convert(model_prepared)
 
     return model_quantized
-
-def measure_inference_time(model, dataloader, device, num_batches=100):
-    model.eval()
-
-    with torch.inference_mode():
-        for _ in range(5):
-            inputs, _ = next(iter(dataloader))
-            inputs = inputs.to(device)
-            _ = model(inputs)
-
-    total_time = 0.0
-
-    with torch.inference_mode():
-        for i, (inputs, _) in enumerate(dataloader):
-            if i >= num_batches:
-                break
-
-            start_time = time.time()
-            _ = model(inputs)
-            end_time = time.time()
-
-            total_time += (end_time - start_time)
-
-    avg_time_per_batch = total_time / num_batches
-    return avg_time_per_batch
 
 def iterative_pruner(pruner, iterative_pruning_steps=1):
     # Set example inputs (same every time)
