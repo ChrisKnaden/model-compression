@@ -11,9 +11,9 @@ If you are not familiar with jupyter notebook, have not installed it or don't kn
 **models**: Pretrained models to test the pipelines. They are "selfmade"-models, therefore, they may not achieve the best accuracy results. The naming conventions indicate the model compression technique. For example: pruned_45-30_kd_10_resnet110_mps.pth means ch_sparsity = 0.45, 30 epochs normal training, 10 epochs knowledge distillation training, the base model was ResNet110 and it was trained on and safed as the MPS GPU.
 
 >[!NOTE]
-> You may need to install some external packages. Most important one is torch-pruning==1.5.2
->
-> You may need to change the GPU inputs, if you don't have a MPS GPU.
+> You may need to install some pip packages. The most important one is torch-pruning==1.5.2
+> 
+>You may need to change the GPU inputs, if you don't have a MPS GPU.
 
 # Credits
 
