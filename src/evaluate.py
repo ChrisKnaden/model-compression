@@ -3,6 +3,9 @@ import time
 import torch
 import torch.nn as nn
 import os
+import matplotlib.pyplot as plt
+import numpy as np
+
 
 def evaluate(model, val_loader, device, use_half=False):
 
@@ -117,3 +120,41 @@ def get_model_file_size(path, unit="MB"):
         return size_bytes / 1024
     else:
         return size_bytes
+
+# CIFAR-10 classes
+CLASSES = ['plane', 'car', 'bird', 'cat', 'deer',
+           'dog', 'frog', 'horse', 'ship', 'truck']
+
+def visualize_model_predictions(model, dataloader, device='cuda', num_images=8):
+    model.to(device)
+    model.eval()
+
+    # Get a batch
+    images, labels = next(iter(dataloader))
+    images, labels = images.to(device), labels.to(device)
+
+    with torch.no_grad():
+        outputs = model(images)
+        _, preds = torch.max(outputs, 1)
+
+    # Unnormalize for display
+    def imshow(img_tensor):
+        mean = np.array([0.485, 0.456, 0.406])
+        std = np.array([0.229, 0.224, 0.225])
+        img = img_tensor.cpu().numpy().transpose((1, 2, 0))
+        img = std * img + mean
+        img = np.clip(img, 0, 1)
+        plt.imshow(img)
+        plt.axis('off')
+
+    # Plot predictions
+    plt.figure(figsize=(num_images * 1.5, 3))
+    for idx in range(min(num_images, images.size(0))):
+        plt.subplot(1, num_images, idx + 1)
+        imshow(images[idx])
+        pred_label = CLASSES[preds[idx]]
+        true_label = CLASSES[labels[idx]]
+        title_color = 'green' if preds[idx] == labels[idx] else 'red'
+        plt.title(f"P: {pred_label}\nT: {true_label}", color=title_color, fontsize=8)
+    plt.tight_layout()
+    plt.show()
