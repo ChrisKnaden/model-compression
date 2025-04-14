@@ -1,7 +1,7 @@
 Model,Accuracy (%),Parameters,Inference Time (s),Memory Footprint (MB),File Size (MB)
-Base Model,90.14,"1,730,714",0.6020,6.60,6.92
+Base Model,90.14,"1,730,714",0.602,6.6,6.92
 Pruned 50%,88.61,"848,388",0.3682,3.24,3.54
 Pruned 70%,86.49,"509,972",0.2894,1.95,2.24
-Pruned + KD 70%,86.70,"509,972",0.2475,1.95,2.25
+Pruned + KD 70%,86.7,"509,972",0.2475,1.95,2.25
 Base Quantized,90.04,"1,730,714",0.3042,1.65,1.77
-Pruned + KD + Quantized 70%,86.70,"509,972",0.1681,0.49,0.61
+Pruned + KD + Quantized 70%,86.7,"509,972",0.1681,0.49,0.61
