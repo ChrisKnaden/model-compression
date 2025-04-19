@@ -1,0 +1,6 @@
+torch-pruning==1.5.2
+torch
+pandas
+matplotlib
+torchvision
+tqdm

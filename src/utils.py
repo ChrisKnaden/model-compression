@@ -79,7 +79,7 @@ def quantize_model(model, val_loader, device, backend='fbgemm'):
 
     return model_quantized
 
-def iterative_pruner(pruner, iterative_pruning_steps=1):
+def iterative_pruner(pruner, gradient=False, iterative_pruning_steps=1):
     # Set example inputs (same every time)
     example_inputs = torch.randn(1, 3, 32, 32)
 
@@ -97,10 +97,11 @@ def iterative_pruner(pruner, iterative_pruning_steps=1):
     imp = pruner.importance
 
     for i in range(iterative_pruning_steps):
-        if isinstance(imp, tp.importance.TaylorImportance):
-            # TaylorImportance needs gradient
+        if gradient:
+            # for e.g. TaylorImportance needs gradient
             loss = pruner.model(example_inputs).sum()
             loss.backward()
+
         pruner.step()
         macs, nparams = tp.utils.count_ops_and_params(pruner.model, example_inputs)
 

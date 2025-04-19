@@ -145,6 +145,7 @@ class ResNet(nn.Module):
         out = self.dequant(out) # add dequant
         return out
 
+    # TODO: Change Functional methods to to general pytorch functions to fuze all layers, also relus
     def fuse_model(self):
         torch.quantization.fuse_modules(self, [['conv1', 'bn1']], inplace=True)
         for m in self.layer1:
