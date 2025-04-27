@@ -4,13 +4,6 @@ import torch
 import torch.utils.data
 
 def get_cifar10_loader(split='train', batch_size=128, workers=0, subset_size=0):
-    """
-    Args:
-        split (str): 'train' or 'val'
-        batch_size (int): Batch size for DataLoader
-        workers (int): Number of worker threads
-        subset_size (int): If > 0, return a subset of the dataset
-    """
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
