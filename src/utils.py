@@ -52,29 +52,16 @@ def load_quantized_model(path: str):
     model.eval()
     return model
 
-def quantize_model(model, val_loader, device, backend='fbgemm'):
+def quantize_model(model, val_loader, device, backend='qnnpack'):
     model.to(device)
-
-    # Set quantization backend
     torch.backends.quantized.engine = backend
-
-    # Prepare model for quantization
     model_fp32 = model
     model_fp32.eval()
 
-    # Fuse modules (make sure model has a `fuse_model()` method)
     model_fp32.fuse_model()
-
-    # Set quantization config
     model_fp32.qconfig = torch.quantization.get_default_qconfig(backend)
-
-    # Insert observers
     model_prepared = torch.quantization.prepare(model_fp32, inplace=False)
-
-    # Calibration with representative dataset
     evaluate(model_prepared, val_loader, device)
-
-    # Convert to quantized model
     model_quantized = torch.quantization.convert(model_prepared)
 
     return model_quantized

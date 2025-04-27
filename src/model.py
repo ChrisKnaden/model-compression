@@ -1,5 +1,3 @@
-from torch.ao.nn.quantized import FloatFunctional
-
 '''
 Copyright (c) 2018, Yerlan Idelbayev
 

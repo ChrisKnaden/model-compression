@@ -6,9 +6,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
-
 def evaluate(model, val_loader, device, use_half=False):
-
     criterion = nn.CrossEntropyLoss().to(device)
     model.eval().to(device)
 
@@ -41,9 +39,6 @@ def evaluate(model, val_loader, device, use_half=False):
     print(f"Validation Accuracy: {acc:.2f}%, Avg Loss: {avg_loss:.4f}, Time: {elapsed:.2f}s")
     return acc, avg_loss, elapsed
 
-import time
-import torch
-
 def measure_inference_time(model, dataloader, device, num_batches=100):
     model.eval()
 
@@ -73,7 +68,6 @@ def measure_inference_time(model, dataloader, device, num_batches=100):
     return avg_time_per_batch
 
 def count_total_parameters(model, verbose=True):
-    """Counts and optionally prints the total number of parameters in the model."""
     total = sum(p.numel() for p in model.parameters())
     if verbose:
         print(f"Total number of parameters in the model: {total}")
@@ -129,7 +123,6 @@ def visualize_model_predictions(model, dataloader, device='cuda', num_images=8):
     model.to(device)
     model.eval()
 
-    # Get a batch
     images, labels = next(iter(dataloader))
     images, labels = images.to(device), labels.to(device)
 
